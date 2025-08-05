@@ -1,4 +1,4 @@
-import {  ChevronLeft, ChevronRight, Leaf } from "lucide-react"
+import {  Check, ChevronLeft, ChevronRight, ChevronsUpDown, Leaf } from "lucide-react"
 import { Card, CardContent, CardHeader } from "./components/ui/card"
 import { ModeToggle } from "./components/mode-toggle"
 import { useForm } from "react-hook-form"
@@ -12,6 +12,11 @@ import { Button } from "./components/ui/button"
 import { FormSchema, steps, type FormData } from '@/lib/schema'
 import { cnpjMask, cpfMask, phoneMask, removeMask } from '@/utils/masks'
 import { toast } from "sonner"
+import { Checkbox } from "./components/ui/checkbox"
+import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover"
+import { states } from "./utils/states"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./components/ui/command"
+import { cn } from "./lib/utils"
 
 
 function App() {
@@ -31,6 +36,13 @@ function App() {
       cnpj: '',
       razaoSocial: '',
       nomeFantasia: '',
+      cep: '',
+      endereco: '',
+      numero: '',
+      bairro: '',
+      complemento: '',
+      estado: '',
+      cidade: '',
     }
   })
 
@@ -320,7 +332,7 @@ useEffect(() => {
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                         <FormField
                           control={form.control}
                           name="razaoSocial"
@@ -380,10 +392,172 @@ useEffect(() => {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="endereco"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Digite seu endereço"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <FormField
+                      control={form.control}
+                      name="numero"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Digite o número"
+                              {...field}
+                              disabled={field.value === "SN"}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="numero"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2 mt-7">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value === "SN"}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange("SN")
+                                } else {
+                                  field.onChange("")
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="!mt-0">Não possui número</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <FormField
+                      control={form.control}
+                      name="bairro"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bairro</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Digite seu bairro"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="complemento"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Complemento</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Digite o complemento"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <FormField
+                      control={form.control}
+                      name="estado"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Estado *</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    "w-full justify-between",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value
+                                    ? states.find((st) => st.value === field.value)?.label
+                                    : "Selecione o estado"}
+                                  <ChevronsUpDown className="opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[200px] p-0">
+                              <Command>
+                                <CommandInput placeholder="Buscar estado..." className="h-9" />
+                                <CommandList>
+                                  <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                                  <CommandGroup>
+                                    {states.map((st) => (
+                                      <CommandItem
+                                        value={st.label}
+                                        key={st.value}
+                                        onSelect={() => form.setValue("estado", st.value)}
+                                      >
+                                        {st.label}
+                                        <Check
+                                          className={cn(
+                                            "ml-auto",
+                                            st.value === field.value ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cidade"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cidade *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Digite a cidade" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               )}
-
-              
             </form>
           </Form>
 
