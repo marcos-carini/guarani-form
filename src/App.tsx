@@ -442,7 +442,7 @@ useEffect(() => {
                         <FormItem>
                           <FormLabel>CEP *
                             <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank"
-                            className="text-xs text-sky-200">
+                            className="text-xs text-sky-600 dark:text-sky-200">
                               Não sei meu CEP
                             </a>
                           </FormLabel>
