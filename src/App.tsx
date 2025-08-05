@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover
 import { states } from "./utils/states"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./components/ui/command"
 import { cn } from "./lib/utils"
+import { motion } from 'framer-motion'
 
 
 function App() {
@@ -24,6 +25,8 @@ function App() {
   const [currentStep, setCurrentStep] = useState(0)
   const [cnpjLoading, setCnpjLoading] = useState(false)
   const [cepLoading, setCepLoading] = useState(false)
+  const [isAddressLocked, setIsAddressLocked] = useState(false)
+  const delta = currentStep - previousStep
 
 
   const form = useForm<FormData>({
@@ -127,18 +130,21 @@ const handleCepData = async (cep: string) => {
 
     if (data.erro) {
       toast.error("CEP não encontrado")
+      setIsAddressLocked(false)
       return null
     }
 
-    return {
-      endereco: data.logradouro || "",
-      bairro: data.bairro || "",
-      cidade: data.localidade || "",
-      estado: data.uf || "",
-    }
+    form.setValue("endereco", data.logradouro || "")
+    form.setValue("bairro", data.bairro || "")
+    form.setValue("cidade", data.localidade || "")
+    form.setValue("estado", data.uf || "")
+
+    setIsAddressLocked(true) // trava edição
+    return data
   } catch (error) {
     console.error(error)
     toast.error("Erro ao buscar o CEP")
+    setIsAddressLocked(false)
     return null
   }
 }
@@ -170,16 +176,15 @@ useEffect(() => {
       setCepLoading(true)
       const data = await handleCepData(cleanCep)
       setCepLoading(false)
-
-      if (data) {
-        form.setValue("endereco", data.endereco)
-        form.setValue("bairro", data.bairro)
-        form.setValue("cidade", data.cidade)
-        form.setValue("estado", data.estado)
-      }
     }, 500)
 
     return () => clearTimeout(timeout)
+  } else {
+    setIsAddressLocked(false)
+    form.setValue("endereco", "")
+    form.setValue("bairro", "")
+    form.setValue("cidade", "")
+    form.setValue("estado", "")
   }
 }, [watchCep])
   
@@ -236,35 +241,21 @@ useEffect(() => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-12">
               {currentStep === 0 && (
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="nomeCompleto"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome Completo *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Digite seu nome completo"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <motion.div
+                  initial={{ x: delta >= 0 ? '5%' : '-1%', opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
+                  <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="nomeCompleto"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Nome Completo *</FormLabel>
                           <FormControl>
                             <Input
-                              type="email"
-                              placeholder="seu@email.com"
+                              placeholder="Digite seu nome completo"
                               {...field}
                             />
                           </FormControl>
@@ -273,216 +264,206 @@ useEffect(() => {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="telefone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="(11) 99999-9999"
-                              {...field}
-                              onChange={(e) => {
-                                const maskedValue = phoneMask(e.target.value);
-                                field.onChange(maskedValue);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="tipoPessoa"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo de Pessoa *</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex gap-6"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="PF" id="pf" />
-                              <Label htmlFor="pf">
-                                Pessoa Física
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="PJ" id="pj" />
-                              <Label htmlFor="pj">
-                                Pessoa Jurídica
-                              </Label>
-                            </div>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {watchTipoPessoa === 'PF' && (
-                    <FormField
-                      control={form.control}
-                      name="cpf"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CPF *</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="000.000.000-00"
-                              {...field}
-                              onChange={(e) => {
-                                const maskedValue = cpfMask(e.target.value)
-                                field.onChange(maskedValue)
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {watchTipoPessoa === 'PJ' && (
-                     <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="cnpj"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>CNPJ *</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Input
-                                  placeholder="00.000.000/0000-00"
-                                  {...field}
-                                  onChange={(e) => {
-                                    const maskedValue = cnpjMask(e.target.value)
-                                    field.onChange(maskedValue)
-                                  }}
-                                  disabled={cnpjLoading}
-                                />
-                                {cnpjLoading && (
-                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                                  </div>
-                                )}
-                              </div>
+                              <Input
+                                type="email"
+                                placeholder="seu@email.com"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <FormField
+                        control={form.control}
+                        name="telefone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="(11) 99999-9999"
+                                {...field}
+                                onChange={(e) => {
+                                  const maskedValue = phoneMask(e.target.value);
+                                  field.onChange(maskedValue);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="tipoPessoa"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de Pessoa *</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex gap-6"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="PF" id="pf" />
+                                <Label htmlFor="pf">
+                                  Pessoa Física
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="PJ" id="pj" />
+                                <Label htmlFor="pj">
+                                  Pessoa Jurídica
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {watchTipoPessoa === 'PF' && (
+                      <FormField
+                        control={form.control}
+                        name="cpf"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CPF *</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="000.000.000-00"
+                                {...field}
+                                onChange={(e) => {
+                                  const maskedValue = cpfMask(e.target.value)
+                                  field.onChange(maskedValue)
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {watchTipoPessoa === 'PJ' && (
+                      <>
                         <FormField
                           control={form.control}
-                          name="razaoSocial"
+                          name="cnpj"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Razão Social *</FormLabel>
+                              <FormLabel>CNPJ *</FormLabel>
                               <FormControl>
-                                <Input
-                                  placeholder="Razão social da empresa"
-                                  {...field}
-                                  disabled={true}
-                                />
+                                <div className="relative">
+                                  <Input
+                                    placeholder="00.000.000/0000-00"
+                                    {...field}
+                                    onChange={(e) => {
+                                      const maskedValue = cnpjMask(e.target.value)
+                                      field.onChange(maskedValue)
+                                    }}
+                                    disabled={cnpjLoading}
+                                  />
+                                  {cnpjLoading && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                      <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                  )}
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="nomeFantasia"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome Fantasia *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Nome fantasia da empresa"
-                                  {...field}
-                                  disabled={true}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                          <FormField
+                            control={form.control}
+                            name="razaoSocial"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Razão Social *</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Razão social da empresa"
+                                    {...field}
+                                    disabled={true}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="nomeFantasia"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nome Fantasia *</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Nome fantasia da empresa"
+                                    {...field}
+                                    disabled={true}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
               )}
 
               {currentStep === 1 && (
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="cep"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CEP *</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              placeholder="Digite seu CEP"
-                              {...field}
-                              onChange={(e) => {
-                                const maskedValue = cepMask(e.target.value)
-                                field.onChange(maskedValue)
-                              }}
-                              disabled={cepLoading}
-                            />
-                            {cepLoading && (
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                              </div>
-                            )}
-                          </div>
-                          
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="endereco"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Endereço *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Digite seu endereço"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                <motion.div
+                  initial={{ x: delta >= 0 ? '1%' : '-5%', opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
+                  <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="numero"
+                      name="cep"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Número *</FormLabel>
+                          <FormLabel>CEP *</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Digite o número"
-                              {...field}
-                              disabled={field.value === "SN"}
-                            />
+                            <div className="relative">
+                              <Input
+                                placeholder="Digite seu CEP"
+                                {...field}
+                                onChange={(e) => {
+                                  const maskedValue = cepMask(e.target.value)
+                                  field.onChange(maskedValue)
+                                }}
+                                disabled={cepLoading}
+                              />
+                              {cepLoading && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                              )}
+                            </div>
+                            
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -491,133 +472,174 @@ useEffect(() => {
 
                     <FormField
                       control={form.control}
-                      name="numero"
+                      name="endereco"
                       render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2 mt-7">
+                        <FormItem>
+                          <FormLabel>Endereço *</FormLabel>
                           <FormControl>
-                            <Checkbox
-                              checked={field.value === "SN"}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  field.onChange("SN")
-                                } else {
-                                  field.onChange("")
-                                }
-                              }}
+                            <Input
+                              placeholder="Digite seu endereço"
+                              {...field}
+                              disabled={isAddressLocked}
                             />
                           </FormControl>
-                          <FormLabel className="!mt-0">Não possui número</FormLabel>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <FormField
+                        control={form.control}
+                        name="numero"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Número *</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Digite o número"
+                                {...field}
+                                disabled={field.value === "SN"}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="numero"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 mt-7">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value === "SN"}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    field.onChange("SN")
+                                  } else {
+                                    field.onChange("")
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="!mt-0">Não possui número</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <FormField
+                        control={form.control}
+                        name="bairro"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bairro</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Digite seu bairro"
+                                {...field}
+                                disabled={isAddressLocked}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="complemento"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Complemento</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Digite o complemento"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <FormField
+                        control={form.control}
+                        name="estado"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Estado *</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                      "w-full justify-between",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    disabled={isAddressLocked}
+                                  >
+                                    {field.value
+                                      ? states.find((st) => st.value === field.value)?.label
+                                      : "Selecione o estado"}
+                                    <ChevronsUpDown className="opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[200px] p-0">
+                                <Command>
+                                  <CommandInput placeholder="Buscar estado..." className="h-9" />
+                                  <CommandList>
+                                    <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                                    <CommandGroup>
+                                      {states.map((st) => (
+                                        <CommandItem
+                                          value={st.label}
+                                          key={st.value}
+                                          onSelect={() => form.setValue("estado", st.value)}
+                                        >
+                                          {st.label}
+                                          <Check
+                                            className={cn(
+                                              "ml-auto",
+                                              st.value === field.value ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="cidade"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cidade *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Digite a cidade" {...field} 
+                              disabled={isAddressLocked}/>
+                              
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                    <FormField
-                      control={form.control}
-                      name="bairro"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bairro</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Digite seu bairro"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="complemento"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Complemento</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Digite o complemento"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                    <FormField
-                      control={form.control}
-                      name="estado"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Estado *</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  className={cn(
-                                    "w-full justify-between",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value
-                                    ? states.find((st) => st.value === field.value)?.label
-                                    : "Selecione o estado"}
-                                  <ChevronsUpDown className="opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[200px] p-0">
-                              <Command>
-                                <CommandInput placeholder="Buscar estado..." className="h-9" />
-                                <CommandList>
-                                  <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
-                                  <CommandGroup>
-                                    {states.map((st) => (
-                                      <CommandItem
-                                        value={st.label}
-                                        key={st.value}
-                                        onSelect={() => form.setValue("estado", st.value)}
-                                      >
-                                        {st.label}
-                                        <Check
-                                          className={cn(
-                                            "ml-auto",
-                                            st.value === field.value ? "opacity-100" : "opacity-0"
-                                          )}
-                                        />
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="cidade"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cidade *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Digite a cidade" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+                </motion.div>
               )}
             </form>
           </Form>
