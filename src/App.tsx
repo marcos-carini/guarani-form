@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
 import { Label } from "./components/ui/label"
 import { Button } from "./components/ui/button"
 import { FormSchema, steps, type FormData } from '@/lib/schema'
-import { phoneMask, removePhoneMask } from '@/lib/masks'
+import { cnpjMask, cpfMask, phoneMask, removeMask } from '@/lib/masks'
 
 
 function App() {
@@ -68,7 +68,8 @@ function App() {
   const processForm = (data: FormData) => {
     const cleanData = {
     ...data,
-    telefone: data.telefone ? removePhoneMask(data.telefone) : '',
+    telefone: data.telefone ? removeMask(data.telefone) : '',
+    cpf: data.cpf ? removeMask(data.cpf) : '',
   };
   
   console.log('Dados limpos:', cleanData);
@@ -229,6 +230,10 @@ function App() {
                             <Input
                               placeholder="000.000.000-00"
                               {...field}
+                              onChange={(e) => {
+                                const maskedValue = cpfMask(e.target.value)
+                                field.onChange(maskedValue)
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -249,6 +254,10 @@ function App() {
                               <Input
                                 placeholder="00.000.000/0000-00"
                                 {...field}
+                                onChange={(e) => {
+                                  const maskedValue = cnpjMask(e.target.value)
+                                  field.onChange(maskedValue)
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
