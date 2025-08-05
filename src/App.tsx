@@ -259,7 +259,7 @@ useEffect(() => {
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                       <FormField
                         control={form.control}
                         name="email"
@@ -440,7 +440,12 @@ useEffect(() => {
                       name="cep"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>CEP *</FormLabel>
+                          <FormLabel>CEP *
+                            <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank"
+                            className="text-xs text-sky-200">
+                              Não sei meu CEP
+                            </a>
+                          </FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input
