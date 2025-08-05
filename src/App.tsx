@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
 import { Label } from "./components/ui/label"
 import { Button } from "./components/ui/button"
 import { FormSchema, steps, type FormData } from '@/lib/schema'
-import { cnpjMask, cpfMask, phoneMask, removeMask } from '@/lib/masks'
+import { cnpjMask, cpfMask, phoneMask, removeMask } from '@/utils/masks'
 import { toast } from "sonner"
 
 
@@ -363,9 +363,23 @@ useEffect(() => {
               )}
 
               {currentStep === 1 && (
-                <div className="text-center py-12">
-                  <h3 className="text-xl text-white mb-4">Dados de Endereço</h3>
-                  <p className="text-gray-400">Em breve...</p>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="cep"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CEP *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Digite seu CEP"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
 

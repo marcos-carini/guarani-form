@@ -12,6 +12,13 @@ export const FormSchema = z.object({
   cnpj: z.string().optional(),
   razaoSocial: z.string().optional(),
   nomeFantasia: z.string().optional(),
+  cep: z.string().min(9, "CEP inválido"),
+  endereco: z.string().min(1, "Endereço obrigatório"),
+  numero: z.string().min(1, "Número obrigatório"),
+  complemento: z.string().optional(),
+  bairro: z.string().min(1, "Bairro obrigatório"),
+  estado: z.string().min(2, "Estado obrigatório").max(2, "Use apenas a sigla UF"),
+  cidade: z.string().min(1, "Cidade obrigatória"),
 }).superRefine((data, ctx) => {
   if (data.tipoPessoa === 'PF') {
     if (!data.cpf || !isValidCPF(data.cpf)) {
@@ -53,6 +60,14 @@ export const steps = [
   {
     id: 'Passo 2',
     name: 'Endereço',
-    fields: [] as (keyof FormData)[]
+    fields: [
+      'cep',
+      'endereco',
+      'numero',
+      'complemento',
+      'bairro',
+      'estado',
+      'cidade',
+    ] as (keyof FormData)[],
   },
 ]
