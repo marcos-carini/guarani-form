@@ -23,6 +23,7 @@ function App() {
   const [previousStep, setPreviousStep] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
   const [cnpjLoading, setCnpjLoading] = useState(false)
+  const [cepLoading, setCepLoading] = useState(false)
 
 
   const form = useForm<FormData>({
@@ -49,6 +50,7 @@ function App() {
   const { watch, trigger, handleSubmit } = form
   const watchTipoPessoa = watch('tipoPessoa');
   const watchCnpj = watch("cnpj")
+  const watchCep = watch("cep")
 
   type FieldName = keyof FormData;
 
@@ -118,6 +120,29 @@ function App() {
   }
 }
 
+const handleCepData = async (cep: string) => {
+  try {
+    const response = await fetch(`/api/cep/${cep}/json`)
+    const data = await response.json()
+
+    if (data.erro) {
+      toast.error("CEP não encontrado")
+      return null
+    }
+
+    return {
+      endereco: data.logradouro || "",
+      bairro: data.bairro || "",
+      cidade: data.localidade || "",
+      estado: data.uf || "",
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error("Erro ao buscar o CEP")
+    return null
+  }
+}
+
 useEffect(() => {
   const cleanCnpj = removeMask(watchCnpj || "")
 
@@ -136,6 +161,27 @@ useEffect(() => {
     return () => clearTimeout(timeout)
   }
 }, [watchCnpj])
+
+useEffect(() => {
+  const cleanCep = removeMask(watchCep || "")
+
+  if (cleanCep.length === 8) {
+    const timeout = setTimeout(async () => {
+      setCepLoading(true)
+      const data = await handleCepData(cleanCep)
+      setCepLoading(false)
+
+      if (data) {
+        form.setValue("endereco", data.endereco)
+        form.setValue("bairro", data.bairro)
+        form.setValue("cidade", data.cidade)
+        form.setValue("estado", data.estado)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeout)
+  }
+}, [watchCep])
   
 
   return (
@@ -320,6 +366,7 @@ useEffect(() => {
                                     const maskedValue = cnpjMask(e.target.value)
                                     field.onChange(maskedValue)
                                   }}
+                                  disabled={cnpjLoading}
                                 />
                                 {cnpjLoading && (
                                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -384,14 +431,23 @@ useEffect(() => {
                       <FormItem>
                         <FormLabel>CEP *</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Digite seu CEP"
-                            {...field}
-                            onChange={(e) => {
-                              const maskedValue = cepMask(e.target.value)
-                              field.onChange(maskedValue)
-                            }}
-                          />
+                          <div className="relative">
+                            <Input
+                              placeholder="Digite seu CEP"
+                              {...field}
+                              onChange={(e) => {
+                                const maskedValue = cepMask(e.target.value)
+                                field.onChange(maskedValue)
+                              }}
+                              disabled={cepLoading}
+                            />
+                            {cepLoading && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                              </div>
+                            )}
+                          </div>
+                          
                         </FormControl>
                         <FormMessage />
                       </FormItem>
