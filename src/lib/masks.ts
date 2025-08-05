@@ -1,10 +1,17 @@
 export const phoneMask = (value: string): string => {
   const numbers = value.replace(/\D/g, '');
+
+  if (numbers.length === 0) {
+    return '';
+  }
+
   const limitedNumbers = numbers.slice(0, 11);
   
  
-  if (limitedNumbers.length <= 2) {
+  if (limitedNumbers.length === 1) {
     return `(${limitedNumbers}`;
+  } else if (limitedNumbers.length === 2) {
+    return `(${limitedNumbers})`;
   } else if (limitedNumbers.length <= 6) {
     return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2)}`;
   } else if (limitedNumbers.length <= 10) {

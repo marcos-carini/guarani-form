@@ -73,8 +73,6 @@ function App() {
   
   console.log('Dados limpos:', cleanData);
   
-  // Enviar cleanData para API
-  // await api.post('/usuarios', cleanData);
   }
   
 
