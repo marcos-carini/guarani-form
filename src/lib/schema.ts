@@ -1,4 +1,4 @@
-import { isValidCNPJ } from '@/utils/helpers';
+import { isValidCNPJ, isValidCPF } from '@/utils/validators'
 import { z } from 'zod'
 
 export const FormSchema = z.object({
@@ -9,26 +9,38 @@ export const FormSchema = z.object({
   telefone: z.string().optional(),
   tipoPessoa: z.enum(['PF', 'PJ']),
   cpf: z.string().optional(),
-  cnpj: z.string()
-  .refine((value) => isValidCNPJ(value), {
-    message: "CNPJ inválido",
-  })
-  .optional(),
+  cnpj: z.string().optional(),
   razaoSocial: z.string().optional(),
   nomeFantasia: z.string().optional(),
-}).refine((data) => {
+}).superRefine((data, ctx) => {
   if (data.tipoPessoa === 'PF') {
-    return data.cpf && data.cpf.length > 0;
+    if (!data.cpf || !isValidCPF(data.cpf)) {
+      ctx.addIssue({
+        path: ["cpf"],
+        code: "custom",
+        message: "CPF inválido",
+      })
+    }
   }
+
   if (data.tipoPessoa === 'PJ') {
-    return data.cnpj && data.cnpj.length > 0 && 
-           data.razaoSocial && data.razaoSocial.length > 0
+    if (!data.cnpj || !isValidCNPJ(data.cnpj)) {
+      ctx.addIssue({
+        path: ["cnpj"],
+        code: "custom",
+        message: "CNPJ inválido",
+      })
+    }
+
+    if (!data.razaoSocial) {
+      ctx.addIssue({
+        path: ["razaoSocial"],
+        code: "custom",
+        message: "Razão Social é obrigatória",
+      })
+    }
   }
-  return true;
-}, {
-  message: "Preencha os campos obrigatórios conforme o tipo de pessoa",
-  path: ["tipoPessoa"]
-});
+})
 
 export type FormData = z.infer<typeof FormSchema>
 
