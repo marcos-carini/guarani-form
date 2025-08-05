@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
 import { Label } from "./components/ui/label"
 import { Button } from "./components/ui/button"
 import { FormSchema, steps, type FormData } from '@/lib/schema'
-import { cnpjMask, cpfMask, phoneMask, removeMask } from '@/utils/masks'
+import { cepMask, cnpjMask, cpfMask, phoneMask, removeMask } from '@/utils/masks'
 import { toast } from "sonner"
 import { Checkbox } from "./components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover"
@@ -87,6 +87,7 @@ function App() {
     telefone: data.telefone ? removeMask(data.telefone) : '',
     cpf: data.cpf ? removeMask(data.cpf) : '',
     cnpj: data.cnpj ? removeMask(data.cnpj) : '',
+    cep: data.cep ? removeMask(data.cep) : '',
   };
   
   console.log('Dados limpos:', cleanData);
@@ -386,6 +387,10 @@ useEffect(() => {
                           <Input
                             placeholder="Digite seu CEP"
                             {...field}
+                            onChange={(e) => {
+                              const maskedValue = cepMask(e.target.value)
+                              field.onChange(maskedValue)
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

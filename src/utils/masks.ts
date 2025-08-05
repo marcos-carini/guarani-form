@@ -58,6 +58,20 @@ export const cnpjMask = (value: string): string => {
   }
 };
 
+export const cepMask = (value: string): string => {
+  const numbers = value.replace(/\D/g, '')
+
+  if (numbers.length === 0) return ''
+
+  const limitedNumbers = numbers.slice(0, 8) // CEP tem 8 dígitos
+
+  if (limitedNumbers.length <= 5) {
+    return limitedNumbers
+  }
+
+  return `${limitedNumbers.slice(0, 5)}-${limitedNumbers.slice(5)}`
+}
+
 
 export const removeMask = (value: string): string => {
   return value.replace(/\D/g, '');
