@@ -70,7 +70,7 @@ function App() {
       setPreviousStep(currentStep)
       setCurrentStep(step => step + 1)
     } else {
-      await handleSubmit(processForm)()
+      await handleSubmit(onSubmit)()
     }
   }
 
@@ -82,23 +82,18 @@ function App() {
   }
 
   const onSubmit = (data: FormData) => {
-    console.log('Dados do formulário:', data)
-    processForm(data);
+    const cleanData = {
+      ...data,
+      telefone: data.telefone ? removeMask(data.telefone) : '',
+      cpf: data.cpf ? removeMask(data.cpf) : '',
+      cnpj: data.cnpj ? removeMask(data.cnpj) : '',
+      cep: data.cep ? removeMask(data.cep) : '',
+    };
+  
+    console.log('Dados limpos:', cleanData);
+    toast.success('Cadastro realizado com sucesso!')
   }
 
-  const processForm = (data: FormData) => {
-    const cleanData = {
-    ...data,
-    telefone: data.telefone ? removeMask(data.telefone) : '',
-    cpf: data.cpf ? removeMask(data.cpf) : '',
-    cnpj: data.cnpj ? removeMask(data.cnpj) : '',
-    cep: data.cep ? removeMask(data.cep) : '',
-  };
-  
-  console.log('Dados limpos:', cleanData);
-  toast.success('Cadastro realizado com sucesso!')
-  
-  }
 
   const handleCnpjData = async (cnpj: string) => {
   try {
