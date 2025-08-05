@@ -1,3 +1,4 @@
+import { isValidCNPJ } from '@/utils/helpers';
 import { z } from 'zod'
 
 export const FormSchema = z.object({
@@ -8,7 +9,11 @@ export const FormSchema = z.object({
   telefone: z.string().optional(),
   tipoPessoa: z.enum(['PF', 'PJ']),
   cpf: z.string().optional(),
-  cnpj: z.string().optional(),
+  cnpj: z.string()
+  .refine((value) => isValidCNPJ(value), {
+    message: "CNPJ inválido",
+  })
+  .optional(),
   razaoSocial: z.string().optional(),
   nomeFantasia: z.string().optional(),
 }).refine((data) => {
@@ -17,8 +22,7 @@ export const FormSchema = z.object({
   }
   if (data.tipoPessoa === 'PJ') {
     return data.cnpj && data.cnpj.length > 0 && 
-           data.razaoSocial && data.razaoSocial.length > 0 &&
-           data.nomeFantasia && data.nomeFantasia.length > 0;
+           data.razaoSocial && data.razaoSocial.length > 0
   }
   return true;
 }, {

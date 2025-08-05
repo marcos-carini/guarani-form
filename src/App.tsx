@@ -4,7 +4,7 @@ import { ModeToggle } from "./components/mode-toggle"
 import { useForm } from "react-hook-form"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./components/ui/form"
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "./components/ui/input"
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
 import { Label } from "./components/ui/label"
@@ -17,6 +17,8 @@ import { toast } from "sonner"
 function App() {
   const [previousStep, setPreviousStep] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
+  const [cnpjLoading, setCnpjLoading] = useState(false)
+
 
   const form = useForm<FormData>({
     resolver: zodResolver(FormSchema),
@@ -34,6 +36,7 @@ function App() {
 
   const { watch, trigger, handleSubmit } = form
   const watchTipoPessoa = watch('tipoPessoa');
+  const watchCnpj = watch("cnpj")
 
   type FieldName = keyof FormData;
 
@@ -78,6 +81,48 @@ function App() {
   toast.success('Cadastro realizado com sucesso!')
   
   }
+
+  const handleCnpjData = async (cnpj: string) => {
+  try {
+    const cleanCnpj = removeMask(cnpj)
+
+    const res = await fetch(`/api/cnpj/${cleanCnpj}`)
+    const data = await res.json()
+
+    if (data.status === "ERROR") {
+      throw new Error(data.message || "CNPJ inválido")
+    }
+
+    return {
+      razaoSocial: data.nome || "",
+      nomeFantasia: data.fantasia || "",
+    }
+  } catch (error: any) {
+    toast.error("Erro ao buscar CNPJ", {
+      description: error.message || "Não foi possível consultar os dados.",
+    })
+    return null
+  }
+}
+
+useEffect(() => {
+  const cleanCnpj = removeMask(watchCnpj || "")
+
+  if (cleanCnpj.length === 14) {
+    const timeout = setTimeout(async () => {
+      setCnpjLoading(true)
+      const data = await handleCnpjData(cleanCnpj)
+      setCnpjLoading(false)
+
+      if (data) {
+        form.setValue("razaoSocial", data.razaoSocial)
+        form.setValue("nomeFantasia", data.nomeFantasia)
+      }
+    }, 500) 
+
+    return () => clearTimeout(timeout)
+  }
+}, [watchCnpj])
   
 
   return (
@@ -254,14 +299,21 @@ function App() {
                           <FormItem>
                             <FormLabel>CNPJ *</FormLabel>
                             <FormControl>
-                              <Input
-                                placeholder="00.000.000/0000-00"
-                                {...field}
-                                onChange={(e) => {
-                                  const maskedValue = cnpjMask(e.target.value)
-                                  field.onChange(maskedValue)
-                                }}
-                              />
+                              <div className="relative">
+                                <Input
+                                  placeholder="00.000.000/0000-00"
+                                  {...field}
+                                  onChange={(e) => {
+                                    const maskedValue = cnpjMask(e.target.value)
+                                    field.onChange(maskedValue)
+                                  }}
+                                />
+                                {cnpjLoading && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                  </div>
+                                )}
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -279,6 +331,7 @@ function App() {
                                 <Input
                                   placeholder="Razão social da empresa"
                                   {...field}
+                                  disabled={true}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -296,6 +349,7 @@ function App() {
                                 <Input
                                   placeholder="Nome fantasia da empresa"
                                   {...field}
+                                  disabled={true}
                                 />
                               </FormControl>
                               <FormMessage />

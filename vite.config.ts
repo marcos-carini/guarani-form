@@ -11,4 +11,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      "/api/cnpj": {
+        target: "https://www.receitaws.com.br/v1/cnpj",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cnpj/, ""),
+      },
+    },
+  },
 })
