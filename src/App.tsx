@@ -11,6 +11,7 @@ import { Label } from "./components/ui/label"
 import { Button } from "./components/ui/button"
 import { FormSchema, steps, type FormData } from '@/lib/schema'
 import { cnpjMask, cpfMask, phoneMask, removeMask } from '@/lib/masks'
+import { toast } from "sonner"
 
 
 function App() {
@@ -70,9 +71,11 @@ function App() {
     ...data,
     telefone: data.telefone ? removeMask(data.telefone) : '',
     cpf: data.cpf ? removeMask(data.cpf) : '',
+    cnpj: data.cnpj ? removeMask(data.cnpj) : '',
   };
   
   console.log('Dados limpos:', cleanData);
+  toast.success('Cadastro realizado com sucesso!')
   
   }
   
