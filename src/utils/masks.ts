@@ -63,7 +63,7 @@ export const cepMask = (value: string): string => {
 
   if (numbers.length === 0) return ''
 
-  const limitedNumbers = numbers.slice(0, 8) // CEP tem 8 dígitos
+  const limitedNumbers = numbers.slice(0, 8) 
 
   if (limitedNumbers.length <= 5) {
     return limitedNumbers

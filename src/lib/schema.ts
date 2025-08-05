@@ -14,7 +14,7 @@ export const FormSchema = z.object({
   nomeFantasia: z.string().optional(),
   cep: z.string().min(9, "CEP inválido"),
   endereco: z.string().min(1, "Endereço obrigatório"),
-  numero: z.string().min(1, "Número obrigatório"),
+  numero: z.string().min(1, "Se não tiver número, marque a opção  'Não possui número'"),
   complemento: z.string().optional(),
   bairro: z.string().min(1, "Bairro obrigatório"),
   estado: z.string().min(2, "Estado obrigatório").max(2, "Use apenas a sigla UF"),

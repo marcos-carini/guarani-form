@@ -18,6 +18,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/cnpj/, ""),
       },
+      "/api/cep": {
+        target: "https://viacep.com.br/ws",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cep/, ""),
+      },
     },
   },
 })
